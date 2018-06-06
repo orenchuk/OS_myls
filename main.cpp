@@ -29,15 +29,41 @@ void helpInfo() {
 vector<string> getFilesForPathes(const vector<string>& pathes) {
     vector<string> files;
     
+    for (auto& path: pathes) {
+        auto filepath = boost::filesystem::system_complete(path);
+        //        boost::filesystem::path prev("..");
+        if (boost::filesystem::exists(filepath)) {
+            cout << "filepath: " << filepath << endl;
+            for (boost::filesystem::path p : boost::filesystem::directory_iterator(filepath)) {
+                files.push_back(p.filename().string());
+            }
+        }
+        
+    }
+    
     return files;
 }
 
-void showFiles(const vector<string>& pathes) {
-    cout << "showFiles" << endl;
+vector<string> getFilesRecursively(const vector<string>& pathes) {
+    cout << "showFilesRecursively" << endl;
+    vector<string> files;
+    for (auto& path : pathes) {
+        boost::filesystem::recursive_directory_iterator dir(path), end;
+        while(dir != end) {
+            boost::filesystem::path new_path = dir->path();
+            for (boost::filesystem::path p : boost::filesystem::directory_iterator(new_path)) {
+                files.push_back(p.filename().string());
+            }
+            dir++;
+        }
+    }
+    return files;
 }
 
-void showFilesRecursively(const vector<string>& pathes) {
-    cout << "showFilesRecursively" << endl;
+void showFiles(const vector<string>& files) {
+    for (auto& file : files) {
+        cout << file << endl;
+    }
 }
 
 void showFilesWithDetails(const vector<string>& pathes) {
@@ -64,6 +90,7 @@ void readArgs(int argc, const char * argv[], vector<string>& pathes) {
     }
     
     for (int i = 0; i < args.size(); ++i) {
+        bool reversed = false;
         string argument = args[i];
         if ((argument == "-h") || (argument == "--help")) {
             helpInfo();
@@ -73,21 +100,26 @@ void readArgs(int argc, const char * argv[], vector<string>& pathes) {
         } else if (argument == "-F") {
             showFilesWithSpecialChars(pathes);
         } else if (argument == "-R") {
-            showFilesRecursively(pathes);
-        } else if (boost::contains(argument, "--sort")) {
-            bool reversed = false;
-            for (int j = i; j < args.size(); ++j) {
-                string temp = args[j];
-                if (temp == "-r") {
-                    reversed = true;
-                }
-            }
+            getFilesRecursively(pathes);
+        } else if (argument == "-r") {
+            reversed = true;
+        } else if (boost::contains(argument, "--sort") || argument == "-s") {
             showFilesSorted(pathes, reversed);
+        } else if (argument == "-S") {
+            
+        } else if (argument == "-t") {
+        
+        } else if (argument == "-v") {
+            
+        } else if (argument == "-X") {
+            
         } else if (boost::contains(argument, "-")) {
             cerr << "Error: there is no such option: " << argument << endl;
             exit(-1);
         }
     }
+    auto files = getFilesForPathes(pathes);
+    showFiles(files);
 }
 
 int main(int argc, const char * argv[]) {
